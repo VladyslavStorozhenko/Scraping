@@ -30,9 +30,12 @@ class GazetaArticlesSpider(scrapy.Spider):
         item['article_link'] = response.url
         item['article_uuid'] = hashlib.sha256(str(response.url).encode('utf-8')).hexdigest()
         item['article_id'] = response.url.split("/")[-1]
-        item['article_datetime'] = response.xpath('//*[@id="_id_article"]/div[1]/div[1]/time/@datetime').extract()
-        item['article_title'] = response.xpath('//*[@id="_id_article"]/div[1]/h1/text()').extract()
-        item['article_text'] = "\n".join(response.xpath('//*[@id="_id_article"]/div[3]/span/text()').extract())
-        item['article_author'] = "\n".join(response.xpath('//*[@id="_id_article"]/div[1]/div[2]/div[1]/span/span/a/@href').extract())
+        a_id = item['article_id'].split('.')[0]
+        item['article_datetime'] = response.xpath(f'//*[@id="_id_article_{a_id}"]/div[1]/div[1]/time/@datetime').extract()
+        item['article_title'] = response.xpath(f'//*[@id="_id_article_{a_id}"]/div[1]/h1/text()').extract()
+        item['article_text'] = ''
+        for par in response.xpath(f'//*[@id="_id_article_{a_id}"]/div[3]').xpath('.//p'):
+            item['article_text'] += "\n".join(par.xpath('.//text()').extract())
+        item['article_author'] = "\n".join(response.xpath(f'//*[@id="_id_article_{a_id}"]/div[1]/div[2]/div[1]/span/span/a/@href').extract())
 
         yield (item)
